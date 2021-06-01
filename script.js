@@ -1,116 +1,127 @@
-// Generate random room name if needed
-if (!location.hash) {
-  location.hash = Math.floor(Math.random() * 0xFFFFFF).toString(16);
-}
-const roomHash = location.hash.substring(1);
-  
+var apiObj = null;
 
-const drone = new ScaleDrone('JKjJRvuhLCo8q2It');
-// Room name needs to be prefixed with 'observable-'
-const roomName = 'observable-' + roomHash;
-const configuration = {
-  iceServers: [{
-    urls: 'stun:stun.l.google.com:19302'
-  }]
-};
-let room;
-let pc;
+function BindEvent(){
   
-  
-function onSuccess() {};
-function onError(error) {
-  console.error(error);
-};
-  
-drone.on('open', error => {
-  if (error) {
-    return console.error(error);
-  }
-  room = drone.subscribe(roomName);
-  room.on('open', error => {
-    if (error) {
-      onError(error);
-    }
-  });
-  // We're connected to the room and received an array of 'members'
-  // connected to the room (including us). Signaling server is ready.
-  room.on('members', members => {
-    console.log('MEMBERS', members);
-    // If we are the second user to connect to the room we will be creating the offer
-    const isOfferer = members.length === 2;
-    startWebRTC(isOfferer);
-  });
-});
-  
-// Send signaling data via Scaledrone
-function sendMessage(message) {
-  drone.publish({
-    room: roomName,
-    message
-  });
+        
+    
+    
+    $("#btnHangup").on('click', function () {
+        apiObj.executeCommand('hangup');
+    });
+    $("#btnCustomMic").on('click', function () {
+        apiObj.executeCommand('toggleAudio');
+    });
+    $("#btnCustomCamera").on('click', function () {
+        apiObj.executeCommand('toggleVideo');
+    });
+    $("#btnCustomTileView").on('click', function () {
+        apiObj.executeCommand('toggleTileView');
+    });
+    $("#btnScreenShareCustom").on('click', function () {
+        apiObj.executeCommand('toggleShareScreen');
+    });
+    $("#btnCustomchat").on('click', function () {
+        apiObj.executeCommand('toggleChat');
+    });
 }
+
+function StartMeeting(roomName,dispNme){
+    const domain = 'meet.jit.si';
+
+    //var roomName = 'newRoome_' + (new Date()).getTime();
+    
+    const options = {
+        roomName: roomName,
+        width: '100%',
+        height: '100%',
+        parentNode: document.querySelector('#jitsi-meet-conf-container'),
+        userInfo: {
+            displayName: dispNme
+        },
+        configOverwrite:{
+             disableLocalVideoFlip: false,
+             disableDeepLinking: false,
+              enableInsecureRoomNameWarning: false,
+              enableAutomaticUrlCopy: false,
+            enableClosePage: false,
+            disableE2EE: false,
+            doNotStoreRoom: true,
+            startVideoMuted: 0,
+            startWithVideoMuted: true,
+            startWithAudioMuted: true,
+            enableWelcomePage: false,
+
+            prejoinPageEnabled: false,
+            disableRemoteMute: true,
+            notifications: [
+    
+        'dialog.maxUsersLimitReached', // shown when maximmum users limit has been reached
+       'notify.disconnected', // shown when a participant has left
+ 
   
-function startWebRTC(isOfferer) {
-  pc = new RTCPeerConnection(configuration);
-  
-  // 'onicecandidate' notifies us whenever an ICE agent needs to deliver a
-  // message to the other peer through the signaling server
-  pc.onicecandidate = event => {
-    if (event.candidate) {
-      sendMessage({'candidate': event.candidate});
-    }
-  };
-  
-  // If user is offerer let the 'negotiationneeded' event create the offer
-  if (isOfferer) {
-    pc.onnegotiationneeded = () => {
-      pc.createOffer().then(localDescCreated).catch(onError);
-    }
-  }
-  
-  // When a remote stream arrives display it in the #remoteVideo element
-  pc.onaddstream = event => {
-    remoteVideo.srcObject = event.stream;
-  };
-  
-  navigator.mediaDevices.getUserMedia({
-    audio: true,
-    video: true,
-  }).then(stream => {
-    // Display your local video in #localVideo element
-    localVideo.srcObject = stream;
-    // Add your stream to be sent to the conneting peer
-    pc.addStream(stream);
-  }, onError);
-  
-  // Listen to signaling data from Scaledrone
-  room.on('data', (message, client) => {
-    // Message was sent
-    if (client.id === drone.clientId) {
-      return;
-    }
-  
-    if (message.sdp) {
-      // This is called after receiving an offer or answer from another peer
-      pc.setRemoteDescription(new RTCSessionDescription(message.sdp), () => {
-        // When receiving an offer lets answer it
-        if (pc.remoteDescription.type === 'offer') {
-          pc.createAnswer().then(localDescCreated).catch(onError);
+    ],
+
+            remoteVideoMenu: {
+                disableKick: true
+            },
+        },
+        interfaceConfigOverwrite: {
+            
+             MOBILE_APP_PROMO: false,
+            APP_NAME: 'meeting',
+            filmStripOnly: false,
+            SHOW_JITSI_WATERMARK: false,
+             SHOW_POWERED_BY: false,
+    SHOW_PROMOTIONAL_CLOSE_PAGE: false,
+
+            SHOW_WATERMARK_FOR_GUESTS: false,
+            DEFAULT_REMOTE_DISPLAY_NAME: 'New User',
+            TOOLBAR_BUTTONS: []
+        },
+        onload: function () {
+            //alert('loaded');
+            $('#toolbox').show();
         }
-      }, onError);
-    } else if (message.candidate) {
-      // Add the new ICE candidate to our connections remote description
-      pc.addIceCandidate(
-        new RTCIceCandidate(message.candidate), onSuccess, onError
-      );
-    }
-  });
+    };
+    apiObj = new JitsiMeetExternalAPI(domain, options);
+
+    apiObj.addEventListeners({
+        readyToClose: function () {
+            //alert('going to close');
+           $('#jitsi-meet-conf-container').empty();
+            $('#toolbox').hide();
+            $('#container').hide();
+            $('#joinMsg').show().text('Meeting Ended');
+        },
+        audioMuteStatusChanged: function (data) {
+            if(data.muted)
+                $("#btnCustomMic").text('Unmute');
+            else
+                $("#btnCustomMic").text('Mute');
+        },
+        videoMuteStatusChanged: function (data) {
+            if(data.muted)
+                $("#btnCustomCamera").text('Start Cam');
+            else
+                $("#btnCustomCamera").text('Stop Cam');
+        },
+        tileViewChanged: function (data) {
+            
+        },
+        screenSharingStatusChanged: function (data) {
+            if(data.on)
+                $("#btnScreenShareCustom").text('Stop SS');
+            else
+                $("#btnScreenShareCustom").text('Start SS');
+        },
+        participantJoined: function(data){
+            console.log('participantJoined', data);
+        },
+        participantLeft: function(data){
+            console.log('participantLeft', data);
+        }
+    });
+
+    apiObj.executeCommand('subject', 'New Room 2');
 }
-  
-function localDescCreated(desc) {
-  pc.setLocalDescription(
-    desc,
-    () => sendMessage({'sdp': pc.localDescription}),
-    onError
-  );
-}
+
