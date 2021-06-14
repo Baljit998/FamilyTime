@@ -3,6 +3,9 @@ body {
     padding: 0;
     margin: 0;
     height: 100%;
+     background-position: center;
+      background-image: url('video-conferencing-c.jpg');
+    background-size: cover;
 }
 
 *:focus {
@@ -10,7 +13,7 @@ body {
 }
 
 #background {
-    background-image: url('back.jpg');
+
     background-position: center;
     background-size: cover;
     display: table;
@@ -19,9 +22,9 @@ body {
 }
 
 #loginContainer * {
-    color: yellow;
+    color: black;
     font-family: "Helvetica Neue", "Helvetica", "Arial", sans-serif;
-    font-weight: normal;
+       font-weight: revert;
     line-height: 1em;
     box-sizing: border-box;
 }
@@ -43,16 +46,16 @@ body {
 }
 
 ::-moz-placeholder {
-    color: yellow;
+    color: aqua;
     opacity: 1;
 }
 
 :-ms-input-placeholder {
-    color: yellow;
+    color: aqua;
 }
 
 ::-ms-input-placeholder {
-    color: yellow;
+    color: aqua;
 }
 
 #inputContainer {
@@ -78,9 +81,9 @@ body {
 }
 
 #inputContainer label {
-    color: yellow;
+    color: black;
     font-weight: bold;
-    font-size: 13px;
+    font-size: 15px;
     margin-top: 15px;
     display: block;
 }
@@ -89,7 +92,7 @@ body {
     background-color: transparent;
     border: 2px solid black;
     border-radius: 250px;
-    color: yellow;
+    color: black;
     display: block;
     font-size: 14px;
     letter-spacing: 1px;
@@ -123,7 +126,7 @@ body {
 }
 
 #loginText h1 {
-    color: #07d159;
+    color: black;
     font-size: 60px;
     font-weight: bold;
 }
@@ -141,7 +144,7 @@ body {
     list-style-type: none;
     padding: 5px 30px;
     background-image: url('checkmark.png');
-    no-repeat 0 0;
+    
 }
 
 #inputContainer .errorMessage {
